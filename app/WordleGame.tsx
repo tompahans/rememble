@@ -163,7 +163,7 @@ export default function WordleGame({ targetWord, dateString }: Props) {
       : Array(targetWord.length).fill("empty");
 
     for (let i = 0; i < targetWord.length; i++) {
-      const letter = inputVal[i] || "";
+      let letter = inputVal[i] || "";
       let statusClass = "border-[#3a3a3c] bg-transparent text-white"; // empty dark theme Wordle
 
       if (status === "playing") {
@@ -174,6 +174,9 @@ export default function WordleGame({ targetWord, dateString }: Props) {
         if (i === inputVal.length) {
           statusClass = "border-neutral-300 bg-transparent text-white scale-[1.05] transition-transform"; // current
         }
+      } else if (status === "lost") {
+        letter = targetWord[i] || "";
+        statusClass = "bg-[#121213] border-red-500 text-red-500"; // failed style
       } else {
         const evalStatus = evaluation[i];
         if (evalStatus === "correct") statusClass = "bg-[#538d4e] border-[#538d4e] text-white";
@@ -282,8 +285,8 @@ export default function WordleGame({ targetWord, dateString }: Props) {
           </div>
 
           <div className="text-center mb-10">
-            <h2 className={`text-2xl font-bold mb-1 ${status === "won" ? "text-[#538d4e]" : "text-white"}`}>
-              {status === "won" ? "Genius!" : targetWord.toUpperCase()}
+            <h2 className={`text-2xl font-bold mb-1 ${status === "won" ? "text-[#538d4e]" : "text-red-500"}`}>
+              {status === "won" ? "Genius!" : "Wrong!"}
             </h2>
           </div>
 
