@@ -9,6 +9,7 @@ type History = {
   maxStreak: number;
   lastPlayedDate: string | null;
   lastStatus: "won" | "lost" | null;
+  lastGuess?: string;
 };
 
 const DEFAULT_HISTORY: History = {
@@ -44,6 +45,11 @@ export default function WordleGame({ targetWord, dateString }: Props) {
         setHistory(parsed);
         if (parsed.lastPlayedDate === dateString && parsed.lastStatus) {
           setStatus(parsed.lastStatus);
+          if (parsed.lastGuess) {
+            setInputVal(parsed.lastGuess);
+          } else if (parsed.lastStatus === "won") {
+            setInputVal(targetWord);
+          }
         }
       } catch (e) {
         console.error("Failed to parse history.");
@@ -96,23 +102,26 @@ export default function WordleGame({ targetWord, dateString }: Props) {
         maxStreak: newMaxStreak,
         lastPlayedDate: dateString,
         lastStatus: isWin ? "won" : "lost",
+        lastGuess: inputVal,
       };
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (status !== "playing") return;
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (status !== "playing") return;
 
-    // Check if input matches target word precisely
-    if (inputVal.length !== targetWord.length) {
-      // Wordle shakes the row if it's too short, but here we'll just ignore submit
-      // unless user runs out of time.
-      return;
+      // Check if input matches target word precisely
+      if (inputVal.length !== targetWord.length) {
+        // Wordle shakes the row if it's too short, but here we'll just ignore submit
+        // unless user runs out of time.
+        return;
+      }
+
+      const isWin = inputVal.toLowerCase() === targetWord.toLowerCase();
+      handleGameOver(isWin);
     }
-
-    const isWin = inputVal.toLowerCase() === targetWord.toLowerCase();
-    handleGameOver(isWin);
   };
 
   const clearHistory = () => {
@@ -219,7 +228,7 @@ export default function WordleGame({ targetWord, dateString }: Props) {
             0:{timeLeft.toString().padStart(2, '0')}
           </div>
 
-          <form onSubmit={handleSubmit} className="relative mb-2">
+          <div className="relative mb-2">
             <input
               ref={inputRef}
               type="text"
@@ -228,6 +237,7 @@ export default function WordleGame({ targetWord, dateString }: Props) {
                 const val = e.target.value.replace(/[^A-Za-z]/g, "");
                 if (val.length <= targetWord.length) setInputVal(val);
               }}
+              onKeyDown={handleKeyDown}
               className="absolute opacity-0 pointer-events-none w-0 h-0"
               autoFocus
               autoComplete="off"
@@ -240,9 +250,7 @@ export default function WordleGame({ targetWord, dateString }: Props) {
             >
               {getBoxes()}
             </div>
-
-            <button type="submit" className="hidden">Submit</button>
-          </form>
+          </div>
 
           <p className="mt-8 text-neutral-500 text-sm">Type to fill, press ENTER to guess.</p>
         </div>
@@ -255,8 +263,8 @@ export default function WordleGame({ targetWord, dateString }: Props) {
           </div>
 
           <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold text-white mb-1">
-              {status === "won" ? "Genius" : targetWord.toUpperCase()}
+            <h2 className={`text-2xl font-bold mb-1 ${status === "won" ? "text-[#538d4e]" : "text-white"}`}>
+              {status === "won" ? "Genius!" : targetWord.toUpperCase()}
             </h2>
           </div>
 
