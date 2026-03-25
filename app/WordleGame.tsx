@@ -10,6 +10,7 @@ type History = {
   lastPlayedDate: string | null;
   lastStatus: "won" | "lost" | null;
   lastGuess?: string;
+  expiresAt?: number | null;
 };
 
 const DEFAULT_HISTORY: History = {
@@ -19,6 +20,7 @@ const DEFAULT_HISTORY: History = {
   maxStreak: 0,
   lastPlayedDate: null,
   lastStatus: null,
+  expiresAt: null,
 };
 
 type GameStatus = "idle" | "playing" | "won" | "lost";
@@ -41,22 +43,40 @@ export default function WordleGame({ targetWord, dateString }: Props) {
     const stored = localStorage.getItem("wordle-speedy-history");
     if (stored) {
       try {
-        const parsed: History = JSON.parse(stored);
-        setHistory(parsed);
-        if (parsed.lastPlayedDate === dateString && parsed.lastStatus) {
-          setStatus(parsed.lastStatus);
-          if (parsed.lastGuess) {
-            setInputVal(parsed.lastGuess);
-          } else if (parsed.lastStatus === "won") {
-            setInputVal(targetWord);
+        let parsed: History = JSON.parse(stored);
+        
+        if (parsed.lastPlayedDate === dateString) {
+          if (parsed.lastStatus) {
+            setStatus(parsed.lastStatus);
+            if (parsed.lastGuess) {
+              setInputVal(parsed.lastGuess);
+            } else if (parsed.lastStatus === "won") {
+              setInputVal(targetWord);
+            }
+          } else if (parsed.expiresAt) {
+            const now = Date.now();
+            if (now < parsed.expiresAt) {
+              setStatus("playing");
+              setTimeLeft(Math.ceil((parsed.expiresAt - now) / 1000));
+            } else {
+              setStatus("lost");
+              parsed = {
+                ...parsed,
+                played: parsed.played + 1,
+                currentStreak: 0,
+                lastStatus: "lost",
+                lastGuess: "",
+              };
+            }
           }
         }
+        setHistory(parsed);
       } catch (e) {
         console.error("Failed to parse history.");
       }
     }
     setHistoryLoaded(true);
-  }, [dateString]);
+  }, [dateString, targetWord]);
 
   useEffect(() => {
     if (historyLoaded) {
@@ -66,14 +86,19 @@ export default function WordleGame({ targetWord, dateString }: Props) {
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (status === "playing" && timeLeft > 0) {
+    if (status === "playing" && history.expiresAt) {
       timer = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-    } else if (status === "playing" && timeLeft === 0) {
-      handleGameOver(false);
+        const remaining = Math.max(0, Math.ceil((history.expiresAt! - Date.now()) / 1000));
+        setTimeLeft(remaining);
+      }, 500);
     }
     return () => clearInterval(timer);
+  }, [status, history.expiresAt]);
+
+  useEffect(() => {
+    if (status === "playing" && timeLeft === 0) {
+      handleGameOver(false);
+    }
   }, [status, timeLeft]);
 
   useEffect(() => {
@@ -86,16 +111,25 @@ export default function WordleGame({ targetWord, dateString }: Props) {
     setStatus("playing");
     setTimeLeft(60);
     setInputVal("");
+    setHistory((prev) => ({
+      ...prev,
+      lastPlayedDate: dateString,
+      expiresAt: Date.now() + 60000,
+      lastStatus: null,
+      lastGuess: undefined,
+    }));
   };
 
   const handleGameOver = (isWin: boolean) => {
     setStatus(isWin ? "won" : "lost");
     setHistory((prev) => {
+      if (prev.lastStatus) return prev;
       const newPlayed = prev.played + 1;
       const newWon = prev.won + (isWin ? 1 : 0);
       const newStreak = isWin ? prev.currentStreak + 1 : 0;
       const newMaxStreak = Math.max(prev.maxStreak, newStreak);
       return {
+        ...prev,
         played: newPlayed,
         won: newWon,
         currentStreak: newStreak,
