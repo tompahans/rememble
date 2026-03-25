@@ -202,8 +202,27 @@ export default function WordleGame({ targetWord, dateString }: Props) {
       {/* Wordle Header */}
       <header className="w-full border-b border-[#3a3a3c] pb-3 mb-8 flex justify-between items-center px-4">
         <div className="w-16"></div> {/* Spacer */}
-        <h1 className="text-3xl font-extrabold tracking-wider text-white select-none" style={{ fontFamily: "Arial, sans-serif" }}>
-          REMEMBLE
+        <h1 className="flex gap-1 sm:gap-1.5 select-none cursor-default" style={{ fontFamily: "Arial, sans-serif" }}>
+          {"REMEMBLE".split("").map((char, i) => {
+            const offsets = [
+              "",
+              "-translate-y-2",
+              "translate-y-1",
+              "-translate-y-1",
+              "-translate-y-3",
+              "translate-y-1.5",
+              "-translate-y-1",
+              "",
+            ];
+            return (
+              <div
+                key={i}
+                className={`w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center text-lg sm:text-xl font-extrabold text-white bg-[#121213] border-2 border-[#818384] ${offsets[i]} transition-transform`}
+              >
+                {char}
+              </div>
+            );
+          })}
         </h1>
         <div className="w-16 text-neutral-400 text-xs text-right mt-2">{dateString.split('-').slice(1).join('/')}</div>
       </header>
