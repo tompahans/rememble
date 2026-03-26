@@ -291,9 +291,10 @@ export default function WordleGame({ targetWord, dateString }: Props) {
               value={inputVal}
               onChange={(e) => {
                 const val = e.target.value.replace(/[^A-Za-z]/g, "");
-                if (val.length <= targetWord.length) setInputVal(val);
+                setInputVal(val.slice(0, targetWord.length));
               }}
               onKeyDown={handleKeyDown}
+              maxLength={targetWord.length}
               className="absolute opacity-0 pointer-events-none w-0 h-0"
               autoFocus
               autoComplete="off"
