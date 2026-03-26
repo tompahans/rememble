@@ -208,14 +208,11 @@ export default function WordleGame({ targetWord, dateString }: Props) {
         if (i === inputVal.length) {
           statusClass = "border-neutral-300 bg-transparent text-white scale-[1.05] transition-transform"; // current
         }
-      } else if (status === "lost") {
-        letter = targetWord[i] || "";
-        statusClass = "bg-[#121213] border-red-500 text-red-500"; // failed style
       } else {
         const evalStatus = evaluation[i];
         if (evalStatus === "correct") statusClass = "bg-[#538d4e] border-[#538d4e] text-white";
         else if (evalStatus === "present") statusClass = "bg-[#b59f3b] border-[#b59f3b] text-white";
-        else if (evalStatus === "absent") statusClass = "bg-[#3a3a3c] border-[#3a3a3c] text-white";
+        else if (evalStatus === "absent" || evalStatus === "empty") statusClass = "bg-[#3a3a3c] border-[#3a3a3c] text-white";
       }
 
       boxes.push(
@@ -323,6 +320,11 @@ export default function WordleGame({ targetWord, dateString }: Props) {
             <h2 className={`text-2xl font-bold mb-1 ${status === "won" ? "text-[#538d4e]" : "text-red-500"}`}>
               {status === "won" ? "Genius!" : "Wrong!"}
             </h2>
+            {status === "lost" && (
+              <p className="text-neutral-400 text-sm mt-2">
+                The word was: <span className="text-white font-bold uppercase tracking-wider">{targetWord}</span>
+              </p>
+            )}
           </div>
 
           {/* Wordle Statistics */}
