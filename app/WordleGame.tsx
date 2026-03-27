@@ -281,7 +281,7 @@ export default function WordleGame({ targetWord, dateString }: Props) {
             0:{timeLeft.toString().padStart(2, '0')}
           </div>
 
-          <div className="relative mb-2">
+          <div className="relative mb-2 flex justify-center">
             <input
               ref={inputRef}
               type="text"
@@ -292,15 +292,30 @@ export default function WordleGame({ targetWord, dateString }: Props) {
               }}
               onKeyDown={handleKeyDown}
               maxLength={targetWord.length}
-              className="absolute opacity-0 pointer-events-none w-0 h-0"
+              className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-text"
               autoFocus
               autoComplete="off"
               spellCheck="false"
+              autoCorrect="off"
+              autoCapitalize="off"
+              onClick={(e) => {
+                const target = e.currentTarget;
+                target.setSelectionRange(target.value.length, target.value.length);
+              }}
+              onFocus={(e) => {
+                const target = e.currentTarget;
+                // Move cursor to the end on mobile
+                requestAnimationFrame(() => {
+                  try {
+                    target.setSelectionRange(target.value.length, target.value.length);
+                  } catch (e) {}
+                });
+              }}
             />
 
             <div
-              className="flex gap-2 cursor-text"
-              onClick={() => inputRef.current?.focus()}
+              className="flex gap-2"
+              aria-hidden="true"
             >
               {getBoxes()}
             </div>
